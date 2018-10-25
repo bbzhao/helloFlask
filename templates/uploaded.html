@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+    {% for filename in session.filenames %}
+        <a href="{{ url_for('get_file', filename=filename) }}" target="_blank">
+            <img width="100" height="100" src="{{ url_for('get_file', filename=filename) }}">
+        </a>
+    {% endfor %}
+{% endblock %}
