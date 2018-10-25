@@ -1,14 +1,17 @@
 [[source]]
-url = "https://mirrors.aliyun.com/pypi/simple/"
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
 [packages]
 flask = "*"
+flask-wtf = "*"
 python-dotenv = "*"
+flask-ckeditor = "*"
+sqlalchemy = "*"
+flask-sqlalchemy = "*"
 
 [dev-packages]
-watchdog = "*"
 
 [requires]
 python_version = "3.6"
