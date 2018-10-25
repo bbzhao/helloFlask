@@ -300,7 +300,7 @@ def multi_upload():
     return render_template('upload.html', form=form)
 
 
-@app.route('/ckeditor', methods=['GET','POST'])
+@app.route('/ckeditor', methods=['GET', 'POST'])
 def integrate_ckeditor():
     form = RichTextForm()
     if form.validate_on_submit():
@@ -361,12 +361,12 @@ def new_note():
         db.session.commit()
         flash('Your note is saved.')
         return redirect(url_for('index'))
-    return render_template('new_note.html', form = form)
+    return render_template('new_note.html', form=form)
 
 
 @app.shell_context_processor
 def make_shell_content():
-    return dict(db=db, Note=Note)
+    return dict(db=db, Note=Note, Article=Article, Author=Author)
 
 
 class Author(db.Model):
@@ -381,6 +381,43 @@ class Article(db.Model):
     title = db.Column(db.String(50), index=True)
     body = db.Column(db.Text)
     author_id = db.Column(db.Integer, db.ForeignKey('author.id'))
+
+    def __repr__(self):
+        return "<Article '{0}'>".format(self.title)
+
+
+class Writer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    books = db.relationship('Book', back_populates='writer')
+
+
+class Book(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String, index=True)
+    writer_id = db.Column(db.Integer, db.ForeignKey('writer.id'))
+    writer = db.relationship('Writer', back_populates='books')
+
+
+class Country(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+    capital = db.relationship('Capital', uselist=False)
+
+    def __repr__(self):
+        return "<Country '{0}'>".format(self.name)
+
+
+class Capital(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
+    country = db.relationship('Country')
+
+    def __repr__(self):
+        return "<Capital '{0}'>".format(self.name)
+
+
 
 
 if __name__ == '__main__':
