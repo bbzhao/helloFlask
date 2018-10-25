@@ -418,7 +418,5 @@ class Capital(db.Model):
         return "<Capital '{0}'>".format(self.name)
 
 
-
-
 if __name__ == '__main__':
     app.run()
