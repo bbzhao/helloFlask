@@ -454,5 +454,23 @@ class Teacher(db.Model):
         return "<Teacher '{0}'>".format(self.name)
 
 
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(50), unique=True)
+    # comments = db.relationship('Comment', back_populates='post', cascade='save-update, merge, delete')
+    comments = db.relationship('Comment', back_populates='post', cascade='all, delete-orphan')
+
+    def __repr__(self):
+        return "<Post '{0}>".format(self.title)
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    post = db.relationship('Post', back_populates='comments')
+
+
+
 if __name__ == '__main__':
     app.run()
