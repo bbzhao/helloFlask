@@ -1,26 +1,29 @@
 import os
 import uuid
-import click
 from urllib.parse import urlparse, urljoin
 
+import click
 from flask import Flask, url_for, redirect, request, session, render_template, flash, Markup, send_from_directory, abort
+from flask_ckeditor import CKEditor, upload_success, upload_fail
+from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import validate_csrf
 from jinja2.utils import generate_lorem_ipsum
-from wtforms import ValidationError
 
 from forms import *
-from flask_ckeditor import CKEditor, upload_success, upload_fail
 
-from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 
 db = SQLAlchemy(app)  # 传入程序实例，完成初始化
 
+migrate = Migrate(app, db)
+
 app.config['WTF_I18N_ENABLED'] = False  # 会让Flask-WTF 使用默认WTForms内置的错误消息翻译.
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024  # 限制请求报文的最大长度，从而限制最大上传文件的大小 （3M),文件过大 413 错误
 app.config['UPLOAD_PATH'] = os.path.join(app.root_path, 'uploads')
 app.config['ALLOWED_EXTENSIONS'] = ['png', 'jpg', 'jpeg', 'gif']
+
 # ckeditor
 app.config['CKEDITOR_SERVE_LOCAL'] = True
 app.config['CKEDITOR_LANGUAGE'] = 'zh-cn'
@@ -340,13 +343,20 @@ def two_submits():
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
+    # timestamp = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Note {0}>'.format(self.body)
 
 
 @app.cli.command()
-def initdb():
+@click.option('--drop', is_flag=True, help='Create after drop.')
+def initdb(drop):
+    """Initialize the database."""
+    if(drop):
+        click.confirm('This operation will delete the database, do you want to continue?', abort=True)
+        db.drop_all()
+        click.echo('Drop all tables.')
     db.create_all()
     click.echo('Initialized database.')
 
@@ -366,7 +376,7 @@ def new_note():
 
 @app.shell_context_processor
 def make_shell_content():
-    return dict(db=db, Note=Note, Article=Article, Author=Author)
+    return dict(db=db, Note=Note, Article=Article, Author=Author, Country=Country, Capital=Capital)
 
 
 class Author(db.Model):
@@ -416,6 +426,32 @@ class Capital(db.Model):
 
     def __repr__(self):
         return "<Capital '{0}'>".format(self.name)
+
+
+# 多对多关系模型,使用append(),remove()方法增加关系或解除关系
+association_table = db.Table('association',
+                             db.Column('student_id', db.Integer,  db.ForeignKey('student.id')),
+                             db.Column('teacher_id', db.Integer, db.ForeignKey('teacher.id'))
+                             )
+
+
+class Student(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    teachers = db.relationship('Teacher', secondary=association_table, back_populates='students')
+
+    def __repr__(self):
+        return "<Student: '{0}'>".format(self.name)
+
+
+class Teacher(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(70), unique=True)
+    office = db.Column(db.String(20))
+    students = db.relationship('Student', secondary=association_table, back_populates='teachers')
+
+    def __repr__(self):
+        return "<Teacher '{0}'>".format(self.name)
 
 
 if __name__ == '__main__':

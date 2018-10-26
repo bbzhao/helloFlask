@@ -7,3 +7,6 @@
 
 # sqllite
 data.db
+
+# migrations
+migrations/

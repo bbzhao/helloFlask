@@ -10,6 +10,7 @@ python-dotenv = "*"
 flask-ckeditor = "*"
 sqlalchemy = "*"
 flask-sqlalchemy = "*"
+flask-migrate = "*"
 
 [dev-packages]
 
