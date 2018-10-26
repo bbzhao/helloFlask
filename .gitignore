@@ -1,3 +1,3 @@
 # pipenv
-.venv
+/.venv/
 .env
