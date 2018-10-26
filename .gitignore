@@ -1,3 +1,9 @@
+# Pycharm
+.idea/
+
 # pipenv
-/.venv/
+.venv/
 .env
+
+# sqllite
+data.db
