@@ -343,7 +343,7 @@ def two_submits():
 class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text)
-    # timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Note {0}>'.format(self.body)
