@@ -1,0 +1,5 @@
+Hello {{ name}},
+Thank you ro subscribing Flask Weekly!
+Enjoy the reading : )
+
+Visit this link to unsubscribe: {{ url_for('unsubscribe', _external=True) }}

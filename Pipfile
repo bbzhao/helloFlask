@@ -11,6 +11,7 @@ flask-ckeditor = "*"
 sqlalchemy = "*"
 flask-sqlalchemy = "*"
 flask-migrate = "*"
+flask-mail = "*"
 
 [dev-packages]
 

@@ -76,3 +76,18 @@ class EditNoteForm(NewNoteForm):
 
 class DeleteNoteForm(FlaskForm):
     submit = SubmitField('Delete')
+
+
+class EmailForm(FlaskForm):
+    to = StringField('To', validators=[DataRequired(), Email()])
+    subject = StringField('Subject', validators=[DataRequired()])
+    body = TextAreaField('Body', validators=[DataRequired()])
+    submit_smtp = SubmitField('Send with SMTP')
+    submit_api = SubmitField('Send with SendGrid API')
+    submit_async = SubmitField('Send with SMTP asynchronously')
+
+
+class SubscribeForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Subscribe')

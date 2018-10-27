@@ -1,5 +1,6 @@
 import os
 import uuid
+from threading import Thread
 from urllib.parse import urlparse, urljoin
 
 import click
@@ -12,12 +13,9 @@ from jinja2.utils import generate_lorem_ipsum
 from forms import *
 
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
-
-db = SQLAlchemy(app)  # 传入程序实例，完成初始化
-
-migrate = Migrate(app, db)
 
 app.config['WTF_I18N_ENABLED'] = False  # 会让Flask-WTF 使用默认WTForms内置的错误消息翻译.
 app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024  # 限制请求报文的最大长度，从而限制最大上传文件的大小 （3M),文件过大 413 错误
@@ -33,9 +31,30 @@ app.config['CKEDITOR_FILE_UPLOADER'] = 'upload_for_ckeditor'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL',
                                                   'sqlite:///{0}'.format(os.path.join(app.root_path, 'data.db')))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # 是否追踪对象的修改，用于sqlalchemy的时间通知系统
-
 app.secret_key = os.getenv('SECRET_KEY', 'secret string')
+
+# flask_mail
+# app.config.update(
+#     MAIL_SERVER = os.getenv('MAIL_SERVER'),
+#     MAIL_PORT = os.getenv('MAIL_PORT'),
+#     MAIL_USE_SSL = os.getenv('MAIL_USE_SSL'),
+#     MAIL_USERNAME = os.getenv('MAIL_USERNAME'),
+#     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD'),
+#     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+# )
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = os.getenv('MAIL_PORT')
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL')
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['FLASK_MAIL_SUBJECT_PREFIX'] = '163.com'
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER')
+
+db = SQLAlchemy(app)  # 传入程序实例，完成初始化
+migrate = Migrate(app, db)
 ckeditor = CKEditor(app)
+mail = Mail(app)
+
 user = {
     'username': 'Grey Li',
     'bio': 'A boy who loves movies and music.',
@@ -469,6 +488,27 @@ class Comment(db.Model):
     body = db.Column(db.Text)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     post = db.relationship('Post', back_populates='comments')
+
+
+# 异步发送方法
+def _send_async_mail(app, message):
+    with app.app_content():
+        mail.send(message)
+
+
+def send_mail(subject, to, body):
+    message = Message(subject, recipients=[to], body=body)
+    # mail.send(message)
+    # 由于发送需要时间，修改为异步
+    thr = Thread(target=_send_async_mail, args=[app, message])
+    thr.start()
+    return thr
+
+def send_subscribe_mail(subject, to , **kwargs):
+    message = Message(subject, recipients=[to], sender='Flask Weekly <%s>'%os.getenv('MAIL_USERNAME'))
+    message.body = render_template('emails/subscribe.txt', **kwargs)
+    message.html = render_template('emails/subscribe.html', **kwargs)
+    mail.send(message)
 
 
 
